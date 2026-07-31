@@ -12,7 +12,7 @@ func main() {
 	router.GET("/projeto-korp", func(context *gin.Context) {
 		context.JSON(http.StatusOK, gin.H{
 			"nome":    "Projeto Korp",
-			"horario": time.Now().UTC().Format("15:04:05"),
+			"horario": time.Now().UTC().Format(time.RFC3339),
 		})
 	})
 
