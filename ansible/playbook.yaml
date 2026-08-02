@@ -6,3 +6,4 @@
     - update-os
     - docker
     - docker-non-root
+    - app
