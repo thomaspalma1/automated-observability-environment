@@ -1,0 +1,5 @@
+- name: Create korp-network bridge network
+  community.docker.docker_network:
+    name: korp-network
+    driver: bridge
+    state: present
