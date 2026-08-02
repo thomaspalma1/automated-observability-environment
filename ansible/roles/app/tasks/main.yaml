@@ -1,0 +1,25 @@
+---
+- name: Install git
+  ansible.builtin.apt:
+    name: git
+    state: present
+
+- name: Clone the Korp Lab repository
+  ansible.builtin.git:
+    repo: "https://github.com/thomaspalma1/korp-lab.git"
+    dest: "/home/vagrant/korp-lab"
+    version: main
+    force: true
+
+- name: Ensure repository ownership belongs to vagrant user
+  ansible.builtin.file:
+    path: "/home/vagrant/korp-lab"
+    owner: vagrant
+    group: vagrant
+    recurse: true
+
+- name: Build and start the application stack
+  community.docker.docker_compose_v2:
+    project_src: "/home/vagrant/korp-lab"
+    build: always
+    state: present
