@@ -32,3 +32,4 @@ go.work.sum
 # .vscode/
 /.vagrant
 *.log
+ansible/inventory.ini
