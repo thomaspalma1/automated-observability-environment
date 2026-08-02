@@ -40,4 +40,4 @@ services:
 
 networks:
   korp-network:
-    driver: bridge
+    external: true
