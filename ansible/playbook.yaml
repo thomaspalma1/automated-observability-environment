@@ -1,0 +1,8 @@
+---
+- name: Provision the Korp Project Environment
+  hosts: korp_lab
+  become: true
+  roles:
+    - update-os
+    - docker
+    - docker-non-root
