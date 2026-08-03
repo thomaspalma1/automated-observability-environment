@@ -8,6 +8,6 @@
 - name: Configure Prometheus
   ansible.builtin.copy:
     src: /opt/korp-lab/prometheus/prometheus.yaml
-    dest: /etc/korp-lab/prometheus/prometheus.yml
+    dest: /etc/korp-lab/prometheus/prometheus.yaml
     remote_src: true
     mode: "0644"
