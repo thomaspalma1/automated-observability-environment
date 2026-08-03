@@ -7,7 +7,7 @@
 - name: Clone the Korp Lab repository
   ansible.builtin.git:
     repo: "https://github.com/thomaspalma1/korp-lab.git"
-    dest: "{{ app_dir }}"
+    dest: "/opt/korp-lab"
     version: main
     force: true
 
