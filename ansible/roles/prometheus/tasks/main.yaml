@@ -1,0 +1,13 @@
+---
+- name: Create Prometheus configuration directory
+  ansible.builtin.file:
+    path: /etc/korp-lab/prometheus/
+    state: directory
+    mode: "0755"
+
+- name: Configure Prometheus
+  ansible.builtin.copy:
+    src: /opt/korp-lab/prometheus/prometheus.yaml
+    dest: /etc/korp-lab/prometheus/prometheus.yml
+    remote_src: true
+    mode: "0644"
