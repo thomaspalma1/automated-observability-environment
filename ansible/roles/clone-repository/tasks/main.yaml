@@ -11,9 +11,9 @@
     version: main
     force: true
 
-- name: Ensure repository ownership belongs to vagrant user
+- name: Ensure repository ownership belongs to the deployment user
   ansible.builtin.file:
     path: "/opt/korp-lab"
-    owner: vagrant
-    group: vagrant
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
     recurse: true
