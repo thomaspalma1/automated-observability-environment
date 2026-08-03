@@ -1,3 +1,4 @@
+---
 - name: Create Grafana configuration and provisioning directories
   ansible.builtin.file:
     path: "{{ item }}"
@@ -7,3 +8,14 @@
     - /etc/korp-lab/grafana/provisioning/datasources
     - /etc/korp-lab/grafana/provisioning/dashboards
     - /etc/korp-lab/grafana/dashboards
+
+- name: Copy Grafana configuration and dashboard files
+  ansible.builtin.copy:
+    src: "/opt/korp-lab/grafana/{{ item }}"
+    dest: "/etc/korp-lab/grafana/{{ item }}"
+    remote_src: true
+    mode: "0644"
+  loop:
+    - provisioning/datasources/datasources.yaml
+    - provisioning/dashboards/dashboards.yaml
+    - dashboards/http-server-projeto-korp-dashboard.json
