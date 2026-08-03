@@ -7,5 +7,6 @@
     - docker
     - docker-non-root
     - docker-network
+    - nginx
     - app
     - validation
