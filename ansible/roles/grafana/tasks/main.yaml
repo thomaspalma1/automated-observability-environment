@@ -1,0 +1,9 @@
+- name: Create Grafana configuration and provisioning directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: "0755"
+  loop:
+    - /etc/korp-lab/grafana/provisioning/datasources
+    - /etc/korp-lab/grafana/provisioning/dashboards
+    - /etc/korp-lab/grafana/dashboards
