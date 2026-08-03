@@ -13,7 +13,7 @@
 
 - name: Ensure repository ownership belongs to vagrant user
   ansible.builtin.file:
-    path: "{{ app_dir }}"
+    path: "/opt/korp-lab"
     owner: vagrant
     group: vagrant
     recurse: true
