@@ -9,5 +9,7 @@
     - docker-network
     - clone-repository
     - nginx
+    - prometheus
+    - grafana
     - app
     - validation
