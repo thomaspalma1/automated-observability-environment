@@ -6,7 +6,7 @@
 
 - name: Configure Nginx reverse proxy
   ansible.builtin.copy:
-    src: "{{ ansible_env.HOME }}/korp-lab/nginx/http-server-projeto-korp.conf"
+    src: "{{ app_dir }}/nginx/http-server-projeto-korp.conf"
     dest: /etc/korp-lab/nginx/http-server-projeto-korp.conf
     remote_src: true
     mode: "0644"
