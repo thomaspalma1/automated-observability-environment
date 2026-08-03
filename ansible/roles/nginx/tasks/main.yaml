@@ -1,0 +1,12 @@
+- name: Create the Nginx configuration directory on the server
+  ansible.builtin.file:
+    path: /etc/korp-lab/nginx
+    state: directory
+    mode: "0755"
+
+- name: Configure Nginx reverse proxy
+  ansible.builtin.copy:
+    src: "{{ ansible_env.HOME }}/korp-lab/nginx/http-server-projeto-korp.conf"
+    dest: /etc/korp-lab/nginx/http-server-projeto-korp.conf
+    remote_src: true
+    mode: "0644"
