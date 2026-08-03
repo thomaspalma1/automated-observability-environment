@@ -4,7 +4,7 @@
   become: true
   roles:
     - update-os
-    - docker
+    - docker-install
     - docker-non-root
     - docker-network
     - clone-repository
