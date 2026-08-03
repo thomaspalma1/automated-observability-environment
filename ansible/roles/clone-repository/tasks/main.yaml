@@ -1,0 +1,19 @@
+---
+- name: Install git
+  ansible.builtin.apt:
+    name: git
+    state: present
+
+- name: Clone the Korp Lab repository
+  ansible.builtin.git:
+    repo: "https://github.com/thomaspalma1/korp-lab.git"
+    dest: "{{ app_dir }}"
+    version: main
+    force: true
+
+- name: Ensure repository ownership belongs to vagrant user
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    owner: vagrant
+    group: vagrant
+    recurse: true
