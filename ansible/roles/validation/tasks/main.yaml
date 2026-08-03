@@ -1,0 +1,15 @@
+---
+- name: Wait for the service to respond
+  ansible.builtin.uri:
+    url: http://localhost/projeto-korp
+    method: GET
+    status_code: 200
+    return_content: true
+  register: service_response
+  retries: 5
+  delay: 3
+  until: service_response.status == 200
+
+- name: Display the service response
+  ansible.builtin.debug:
+    msg: "{{ service_response.content }}"

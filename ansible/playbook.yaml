@@ -8,3 +8,4 @@
     - docker-non-root
     - docker-network
     - app
+    - validation
