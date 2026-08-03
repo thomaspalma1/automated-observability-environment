@@ -2,8 +2,6 @@
 - name: Provision the Korp Project Environment
   hosts: korp_lab
   become: true
-  vars:
-    app_dir: "{{ ansible_user_dir }}/korp-lab"
   roles:
     - update-os
     - docker
