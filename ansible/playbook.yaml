@@ -12,4 +12,4 @@
     - prometheus
     - grafana
     - app
-    - validation
+    - service-validation
