@@ -155,8 +155,6 @@ git clone https://github.com/thomaspalma1/korp-lab.git
 cd korp-lab
 ```
 
-(Talvez trocar por um curl usando um install sh ou makefile?)
-
 ### 2. Bring up the virtual machine
 
 ```bash
@@ -323,14 +321,24 @@ The `/metrics` endpoint is meant for machine-to-machine consumption, not for ext
 
 Rather than copying files from the control machine into the VM, the `clone-repository` role clones the project's public GitHub repository directly. This was chosen deliberately to mirror a more realistic deployment flow, and to guarantee that the provisioned environment always reflects exactly what is published in the repository, eliminating any risk of divergence between local, uncommitted changes and what actually gets deployed.
 
+In a real production environment, the most appropriate approach would be to use a **CI/CD** pipeline.
+
+For example, during the **Continuous Integration (CI)** stage, a new Docker image could be built from a specific version of the codebase, using tags to manage releases and ensure traceability.
+
+Then, during the **Continuous Deployment (CD)** stage, this image would be pushed to an image registry, such as **Nexus Repository**, **Cloudsmith**, **AWS CodeArtifact**, or other equivalent solutions.
+
+This way, the deployment process would use a previously built and versioned image, without requiring the build process to be executed directly in the target environment.
+
+However, considering the limitations and scope of this project, the source of truth used is the repository itself hosted on GitHub. For this reason, the chosen approach was to clone the repository and perform the image build process during infrastructure provisioning.
+
 ### Nginx, Prometheus, and Grafana configuration files live in `/opt` and are deployed to `/etc`
 
 Following the Linux Filesystem Hierarchy Standard, the cloned repository (source code) lives under `/opt/korp-lab`, while the configuration files actually consumed by each container are copied to `/etc/korp-lab/<service>` by dedicated Ansible roles. This keeps the git checkout and the deployed configuration as two clearly separated concerns, even though both ultimately originate from the same single source of truth: the repository.
 
 ### Nginx configuration is deployed via a dedicated Ansible role; Prometheus and Grafana follow the same pattern for consistency
 
-The technical challenge document explicitly allows the Grafana dashboard to be configured manually, treating file-based provisioning as a bonus. Nginx configuration, however, has no such exception in the text. To keep the automation consistent and avoid two different delivery strategies for conceptually similar configuration files, all three services (Nginx, Prometheus, Grafana) are configured through dedicated, single-responsibility Ansible roles, even though strictly only Nginx required it.
+The technical challenge document explicitly allows the Grafana dashboard to be configured manually, treating file-based provisioning as a bonus. However, the Nginx configuration has no such exception in the text. To keep the automation consistent and avoid two different delivery strategies for conceptually similar configuration files, all three services (Nginx, Prometheus, Grafana) are configured through dedicated, single-responsibility Ansible roles, even though strictly only Nginx required it.
 
 ### The `vagrant` user is added to the `docker` group
 
-This is not strictly required for the Ansible-driven provisioning to work, since all Ansible tasks already run with elevated privileges via `become: true`. However, it follows Docker's official post-installation recommendation and makes manual inspection of the environment (`vagrant ssh` followed by `docker ps`, without `sudo`) considerably more convenient during a live demonstration.
+This is not strictly required for the Ansible-driven provisioning to work, since all Ansible tasks already run with elevated privileges via `become: true`. However, it follows Docker's official post-installation recommendation and makes manual inspection of the environment (`vagrant ssh` followed by `docker ps`, without `sudo`) considerably more convenient during a live demonstration. (Verificar posteriormente, contornar usando Vagrantfile)
