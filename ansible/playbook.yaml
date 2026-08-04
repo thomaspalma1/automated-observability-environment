@@ -11,5 +11,5 @@
     - nginx
     - prometheus
     - grafana
-    - app
+    - service-deploy
     - service-validation
