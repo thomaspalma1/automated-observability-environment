@@ -2,7 +2,7 @@
   "title": "Projeto Korp - Overview",
   "uid": "projeto-korp-overview",
   "schemaVersion": 39,
-  "version": 2,
+  "version": 3,
   "refresh": "5s",
   "time": {
     "from": "now-15m",
@@ -15,6 +15,17 @@
       "type": "stat",
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
+        }
+      },
       "targets": [
         {
           "expr": "up{job=\"http-server-projeto-korp\"}",
@@ -28,6 +39,16 @@
       "type": "stat",
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
+      "fieldConfig": {
+        "defaults": {
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "blue", "value": null }
+            ]
+          }
+        }
+      },
       "targets": [
         {
           "expr": "http_requests_total",
