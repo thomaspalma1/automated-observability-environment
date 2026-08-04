@@ -37,7 +37,7 @@ The project was built as a technical assessment, with an emphasis on clear archi
 
 ## 🏗️ Architecture
 
-[I'll add a DrawIO image]
+*Diagram to be added.*
 
 All services run on a shared **Docker** bridge network (`korp-network`), created by **Ansible** before any container starts.
 
@@ -150,6 +150,29 @@ curl http://192.168.56.10:8080/projeto-korp
 # curl: (7) Failed to connect to 192.168.56.10 port 8080: Connection refused
 ```
 
+### 📶 Generating traffic for demonstration purposes
+
+To see the **Grafana** dashboard react to live traffic, particularly the request volume panel, the following script fires a variable number of requests per second against the service, cycling through a fixed sequence of rates:
+
+```bash
+RPS_VALUES=(1 2 3 2 1)
+CYCLES=5
+
+for ((cycle = 1; cycle <= CYCLES; cycle++)); do
+  echo "Cycle $cycle of $CYCLES"
+  for rps in "${RPS_VALUES[@]}"; do
+    echo "  RPS: $rps"
+    interval=$(echo "scale=3; 1 / $rps" | bc)
+    for ((i = 0; i < rps; i++)); do
+      curl -s http://192.168.56.10/projeto-korp
+      sleep "$interval"
+    done
+  done
+done
+```
+
+Stop it at any time with `Ctrl+C`.
+
 ## 📡 Observability Stack
 
 | Tool | Role |
@@ -174,13 +197,20 @@ Access, once the environment is up:
 
 Exposed through **Prometheus**'s native `up` metric, generated automatically for every scrape target. No custom instrumentation is required for this pillar.
 
+This reflects **liveness** (is the process reachable?) rather than **readiness** (is the process functioning correctly?). Since this service has no external dependencies, such as a database or a downstream API, there is currently no scenario where the process would be running but functionally broken, so the two concepts collapse into the same signal here. In a real-world service with such dependencies, a dedicated `/health` endpoint performing deeper checks would provide a more accurate readiness signal, distinguishing "the process is up" from "the process is actually able to do its job."
+
 ### 📈 Request volume
 
-A custom counter, `http_requests_total`, incremented on every call to `/projeto-korp`, exposed in **Prometheus** exposition format via `client_golang`.
+Two complementary metrics expose request volume, each answering a different operational question:
+
+- `http_requests_total`, a raw counter incremented on every call to `/projeto-korp`, answering "how many requests has this service handled in total?"
+- `rate(http_requests_total[1m])`, the same counter's per-second growth rate over a 1-minute window, answering "what is the current traffic pattern?"
+
+Both are exposed in **Prometheus** exposition format via `client_golang`.
 
 ### 📊 Dashboard
 
-A **Grafana** dashboard (`Projeto Korp - Overview`) with two panels: service availability (stat panel) and request volume (time series, using `rate(http_requests_total[1m])`).
+A **Grafana** dashboard (`Projeto Korp - Overview`) with three panels, titled in Portuguese to match the technical challenge's original language: *Disponibilidade do Serviço* (availability), *Total de Requisições Recebidas* (total requests received), and *Volume de Requisições* (request volume, time series using `rate(http_requests_total[1m])`).
 
 ## ⚙️ Infrastructure Provisioning with Vagrant and Ansible
 
@@ -215,29 +245,29 @@ Four containers, all connected to the same externally-managed bridge network:
 
 The following captures follow the natural order of validation. The environment is provisioned, the service responds, **Prometheus** confirms it is collecting metrics, and **Grafana** confirms it is visualizing them.
 
-### 1. Ansible playbook run, ending with the smoke test response
+### 🖥️ 1. Ansible playbook run, ending with the smoke test response
 
 Shows the final task of the playbook printing the service's JSON response directly to the console, satisfying the technical challenge's explicit validation requirement.
 
 ![validation-service](docs/validation-service.png)
 
-### 2. Prometheus, Targets page
+### 🎯 2. Prometheus, Targets page
 
 Confirms the scrape configuration is active and the service is being monitored continuously, not just queried once manually.
 
 ![prometheus-service-up](docs/prometheus-service-up.png)
 
-### 3. Grafana, Data Sources page
+### 🔌 3. Grafana, Data Sources page
 
 Confirms the **Prometheus** data source was connected automatically through provisioning files, not configured manually through the UI.
 
 ![grafana-datasource](docs/grafana-datasource.png)
 
-### 4. Grafana Dashboard
+### 📊 4. Grafana Dashboard
 
-The final deliverable of the monitoring requirement: both required metrics visualized side by side.
+The final deliverable of the monitoring requirement: all required metrics visualized side by side.
 
-**[Screenshot placeholder: Grafana dashboard "Projeto Korp - Overview", showing both panels]**
+**[Screenshot placeholder: Grafana dashboard "Projeto Korp - Overview", showing all three panels]**
 
 ## 🧭 Architectural Decisions
 
