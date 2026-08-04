@@ -231,7 +231,7 @@ Confirms the scrape configuration is active and the service is being monitored c
 
 Confirms the **Prometheus** data source was connected automatically through provisioning files, not configured manually through the UI.
 
-**[Screenshot placeholder: Grafana Data Sources page, showing Prometheus connected]**
+![grafana-datasource](docs/grafana-datasource.png)
 
 ### 4. Grafana Dashboard
 
