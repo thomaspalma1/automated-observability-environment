@@ -225,7 +225,7 @@ Shows the final task of the playbook printing the service's JSON response direct
 
 Confirms the scrape configuration is active and the service is being monitored continuously, not just queried once manually.
 
-**[Screenshot placeholder: Prometheus Targets page, showing `http-server-projeto-korp` as UP]**
+![prometheus-service-up](docs/prometheus-service-up.png)
 
 ### 3. Grafana, Data Sources page
 
