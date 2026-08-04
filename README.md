@@ -57,6 +57,7 @@ The application service is **not** exposed directly to the host. All external tr
 | Infrastructure provisioning | Vagrant, VirtualBox |
 | Configuration management | Ansible |
 | Operating System | Ubuntu 22.04 LTS (Jammy) |
+> [!IMPORTANT]
 > Be aware that Ubuntu was chosen as the operating system for the virtual machine in this project. This decision was made solely for convenience during development and testing.
 > 
 > That said, feel free to use a different Linux distribution if you prefer.
