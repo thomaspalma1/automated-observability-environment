@@ -63,68 +63,7 @@ The application service is **not** exposed directly to the host. All external tr
 
 ## 🗂️ Project Structure
 
-```yaml
-korp-lab
-├── ansible
-│   ├── inventory.ini
-│   ├── inventory.ini.example
-│   ├── playbook.yaml
-│   ├── requirements.yaml
-│   └── roles
-│       ├── clone-repository
-│       │   └── tasks
-│       │       └── main.yaml
-│       ├── docker-install
-│       │   └── tasks
-│       │       └── main.yaml
-│       ├── docker-network
-│       │   └── tasks
-│       │       └── main.yaml
-│       ├── docker-non-root
-│       │   └── tasks
-│       │       └── main.yaml
-│       ├── grafana
-│       │   └── tasks
-│       │       └── main.yaml
-│       ├── nginx
-│       │   └── tasks
-│       │       └── main.yaml
-│       ├── prometheus
-│       │   └── tasks
-│       │       └── main.yaml
-│       ├── service-deploy
-│       │   └── tasks
-│       │       └── main.yaml
-│       ├── service-validation
-│       │   └── tasks
-│       │       └── main.yaml
-│       └── update-os
-│           └── tasks
-│               └── main.yaml
-├── cmd
-│   └── api
-│       └── main.go
-├── docker-compose.yaml
-├── Dockerfile
-├── docs                          # Reserved for screenshots referenced in this README
-├── go.mod
-├── go.sum
-├── grafana
-│   ├── dashboards
-│   │   └── http-server-projeto-korp-dashboard.json
-│   └── provisioning
-│       ├── dashboards
-│       │   └── dashboards.yaml
-│       └── datasources
-│           └── datasources.yaml
-├── LICENSE
-├── nginx
-│   └── http-server-projeto-korp.conf
-├── prometheus
-│   └── prometheus.yaml
-├── README.md
-└── Vagrantfile
-```
+![ProjectStructure](docs/project_overview.png)
 
 ## 🚀 Getting Started
 
