@@ -219,7 +219,7 @@ The following captures follow the natural order of validation. The environment i
 
 Shows the final task of the playbook printing the service's JSON response directly to the console, satisfying the technical challenge's explicit validation requirement.
 
-**[Screenshot placeholder: terminal output of `ansible-playbook`, showing the `service-validation` role's final task]**
+![validation-service](docs/validation-service.png)
 
 ### 2. Prometheus, Targets page
 
