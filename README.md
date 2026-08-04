@@ -134,20 +134,20 @@ The installation process for the host tools can vary significantly depending on 
 
 Once **Vagrant**, **VirtualBox**, and **Ansible** are installed and confirmed to be working correctly, you'll be ready to run this project.
 
-### Prerequisites
+### 🔧 Prerequisites
 
 - [**Vagrant**](https://www.vagrantup.com/)
 - [**VirtualBox**](https://www.virtualbox.org/)
 - [**Ansible**](https://docs.ansible.com/) (on the control machine, not the VM)
 
-### 1. Clone this repository
+### 📥 1. Clone this repository
 
 ```bash
 git clone https://github.com/thomaspalma1/korp-lab.git
 cd korp-lab
 ```
 
-### 2. Bring up the virtual machine
+### 🖥️ 2. Bring up the virtual machine
 
 ```bash
 vagrant up
@@ -165,13 +165,13 @@ This creates an **Ubuntu** 22.04 VM with a fixed private network IP (`192.168.56
 >
 > Make sure both files use the same address to avoid communication issues between **Vagrant** and **Ansible**.
 
-### 3. Prepare the Ansible inventory
+### 📋 3. Prepare the Ansible inventory
 
 ```bash
 cp ansible/inventory.ini.example ansible/inventory.ini
 ```
 
-### 4. Install required Ansible collections
+### 📦 4. Install required Ansible collections
 
 Inside the `ansible` directory, run:
 
@@ -179,7 +179,7 @@ Inside the `ansible` directory, run:
 ansible-galaxy collection install -r requirements.yaml
 ```
 
-### 5. Provision the entire environment
+### 🛠️ 5. Provision the entire environment
 
 Still inside the same directory, run:
 
@@ -231,15 +231,15 @@ Access, once the environment is up:
 
 ## 🎯 Observability Pillars Implemented
 
-### Availability
+### 🟢 Availability
 
 Exposed through **Prometheus**'s native `up` metric, generated automatically for every scrape target. No custom instrumentation is required for this pillar.
 
-### Request volume
+### 📈 Request volume
 
 A custom counter, `http_requests_total`, incremented on every call to `/projeto-korp`, exposed in **Prometheus** exposition format via `client_golang`.
 
-### Dashboard
+### 📊 Dashboard
 
 A **Grafana** dashboard (`Projeto Korp - Overview`) with two panels: service availability (stat panel) and request volume (time series, using `rate(http_requests_total[1m])`).
 
@@ -304,15 +304,15 @@ The final deliverable of the monitoring requirement: both required metrics visua
 
 A few decisions were made where the technical challenge document left room for interpretation. Each is documented here with its rationale.
 
-### Network ownership
+### 🌐 Network ownership
 
 Declaring the network inside `docker-compose.yaml` would work, but it introduces a real operational risk: running `docker compose down` would remove a network that could, in a broader setup, be shared by other services. Creating it explicitly via **Ansible** (`community.docker.docker_network`) and referencing it as `external: true` in **Compose** keeps its lifecycle independent from the application stack, which is a common pattern in real infrastructure.
 
-### Prometheus scrape path
+### 🔍 Prometheus scrape path
 
 The `/metrics` endpoint is meant for machine-to-machine consumption, not for external or human access. Routing it through **Nginx** would add a layer with no functional benefit, since **Nginx** currently has no route configured for it. **Prometheus** reaches the service directly over the internal **Docker** network, which the "no port exposed to host" requirement does not prohibit, since it only restricts host-level access.
 
-### Code delivery strategy
+### 🚢 Code delivery strategy
 
 Rather than copying files from the control machine into the VM, the `clone-repository` role clones the project's public GitHub repository directly. This was chosen deliberately to mirror a more realistic deployment flow, and to guarantee that the provisioned environment always reflects exactly what is published in the repository, eliminating any risk of divergence between local, uncommitted changes and what actually gets deployed.
 
@@ -320,14 +320,14 @@ In a real production environment, the most appropriate approach would be to use 
 
 Given the scope of this project, however, the repository itself hosted on GitHub is treated as the source of truth. For this reason, the chosen approach was to clone the repository and build the image during infrastructure provisioning.
 
-### Configuration file locations
+### 📁 Configuration file locations
 
 Following the Linux Filesystem Hierarchy Standard, the cloned repository (source code) lives under `/opt/korp-lab`, while the configuration files actually consumed by each container are copied to `/etc/korp-lab/<service>` by dedicated **Ansible** roles. This keeps the git checkout and the deployed configuration as two clearly separated concerns, even though both ultimately originate from the same single source of truth: the repository.
 
-### Consistency across configuration roles
+### 🔄 Consistency across configuration roles
 
 The technical challenge document explicitly allows the **Grafana** dashboard to be configured manually, treating file-based provisioning as a bonus. The **Nginx** configuration, however, has no such exception in the text. To keep the automation consistent and avoid two different delivery strategies for conceptually similar configuration files, all three services (**Nginx**, **Prometheus**, **Grafana**) are configured through dedicated, single-responsibility **Ansible** roles, even though strictly only **Nginx** required it.
 
-### Non-root Docker access
+### 🔐 Non-root Docker access
 
 This is not strictly required for the **Ansible**-driven provisioning to work, since all **Ansible** tasks already run with elevated privileges via `become: true`. However, it follows **Docker**'s official post-installation recommendation and makes manual inspection of the environment (`vagrant ssh` followed by `docker ps`, without `sudo`) considerably more convenient during a live demonstration.
