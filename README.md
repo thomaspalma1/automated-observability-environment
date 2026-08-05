@@ -270,7 +270,7 @@ Confirms the **Prometheus** data source was connected automatically through prov
 
 The final deliverable of the monitoring requirement: all required metrics visualized side by side.
 
-**[Screenshot placeholder: Grafana dashboard "Projeto Korp - Overview", showing all three panels]**
+![grafana-panels](docs/grafana-panels.png)
 
 ## 🧭 Architectural Decisions
 
