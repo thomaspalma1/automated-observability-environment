@@ -37,11 +37,15 @@ The project was built as a technical assessment, with an emphasis on clear archi
 
 ## 🏗️ Architecture
 
-*Diagram to be added.*
+The request flow through the system follows a straightforward path:
 
-All services run on a shared **Docker** bridge network (`korp-network`), created by **Ansible** before any container starts.
+1. A client sends an HTTP request to port `80`, the only port exposed to the host.
+2. **Nginx** receives it and reverse-proxies it internally to the Go application on port `8080`.
+3. The Go application processes the request and returns the response through Nginx, back to the client.
+4. Independently, **Prometheus** scrapes the application's `/metrics` endpoint directly over the internal Docker network, on port `8080`, bypassing Nginx entirely.
+5. **Grafana** queries Prometheus and renders the collected metrics on the provisioned dashboard.
 
-The application service is **not** exposed directly to the host. All external traffic reaches it exclusively through the **Nginx** reverse proxy. **Prometheus** reaches the application's `/metrics` endpoint directly over the internal **Docker** network, bypassing **Nginx** entirely, since that endpoint is meant for machine-to-machine scraping, not external or human consumption.
+All four containers, `http-server-projeto-korp`, `nginx`, `prometheus`, and `grafana`, run on a shared Docker bridge network (`korp-network`), created by Ansible before any container starts. The application container is the only one that does not expose any port to the host; it is reachable exclusively from within that network.
 
 ## 🧰 Tech Stack
 
@@ -158,6 +162,7 @@ To see the **Grafana** dashboard react to live traffic, particularly the request
 # Defines the request load pattern.
 # Each range represents a gradual increase or decrease in the number of
 # requests sent, creating a wave-like traffic pattern over time.
+
 load_pattern=({1..10} {9..3} {4..10} {9..1})
 
 while true; do
@@ -272,7 +277,7 @@ The final deliverable of the monitoring requirement: all required metrics visual
 
 ![grafana-panels](docs/grafana-panels.png)
 
-Below is a simulation in which the service is unavailable. In this scenario, you can see how Grafana reflects the application's loss of availability, making it easy to quickly identify that the service has stopped responding.
+And below is a simulation in which the service is unavailable. In this scenario, you can see how Grafana reflects the application's loss of availability, making it easy to quickly identify that the service has stopped responding.
 
 ![grafana-panels-without-availability.png](docs/grafana-panels-without-availability.png)
 
