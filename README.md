@@ -210,7 +210,6 @@ Access, once the environment is up:
 
 | Interface | URL |
 |---|---|
-| Application (via **Nginx**) | http://192.168.56.10 |
 | **Prometheus** UI | http://192.168.56.10:9090 |
 | **Prometheus** Targets page | http://192.168.56.10:9090/targets |
 | **Prometheus** Graph/query page | http://192.168.56.10:9090/graph |
