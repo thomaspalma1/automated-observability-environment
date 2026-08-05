@@ -272,6 +272,10 @@ The final deliverable of the monitoring requirement: all required metrics visual
 
 ![grafana-panels](docs/grafana-panels.png)
 
+Below is a simulation in which the service is unavailable. In this scenario, you can see how Grafana reflects the application's loss of availability, making it easy to quickly identify that the service has stopped responding.
+
+![grafana-panels-without-availability.png](docs/grafana-panels-without-availability.png)
+
 ## 🧭 Architectural Decisions
 
 A few decisions were made where the technical challenge document left room for interpretation. Each is documented here with its rationale.
