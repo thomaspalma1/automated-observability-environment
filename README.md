@@ -18,26 +18,27 @@ A containerized HTTP service built in **Go** with **Gin**, fully provisioned and
 
 - [Overview](#overview)
 - [Architecture](#architecture)
+- [Containers and Docker Compose](#containers-and-docker-compose)
 - [Tech Stack](#tech-stack)
 - [Project Structure](#project-structure)
 - [Getting Started](#getting-started)
 - [Usage Example](#usage-example)
 - [Observability Stack](#observability-stack)
-- [Observability Pillars Implemented](#observability-pillars-implemented)
 - [Infrastructure Provisioning with Vagrant and Ansible](#infrastructure-provisioning-with-vagrant-and-ansible)
-- [Containers and Docker Compose](#containers-and-docker-compose)
 - [Proof of Execution](#proof-of-execution)
 - [Architectural Decisions](#architectural-decisions)
 
+<a id="overview"></a>
 ## 📖 Overview
 
 Korp Lab is a small HTTP service, `http-server-projeto-korp`, that exposes a single endpoint returning its name and the current UTC time. While the service itself is intentionally simple, the project's real focus is the infrastructure and automation around it: a reverse proxy, a full observability stack, and an entirely automated provisioning pipeline that takes a basic Linux VM and turns it into a fully running environment with a single **Ansible** command.
 
-The project was built as a technical assessment, with an emphasis on clear architectural decisions, reproducibility, and commitment to infrastructure best practices.
+This project emphasizes clear architectural decisions, reproducibility, and infrastructure best practices, treating a deliberately small application as a vehicle for exploring container networking, observability, and configuration management in depth.
 
+<a id="architecture"></a>
 ## 🏗️ Architecture
 
-The request flow through the system follows a straightforward path:
+The way requests move through the system is straightforward:
 
 1. A client sends an HTTP request to port `80`, the only port exposed to the host.
 2. **Nginx** receives it and reverse-proxies it internally to the Go application on port `8080`.
@@ -47,6 +48,19 @@ The request flow through the system follows a straightforward path:
 
 All four containers, `http-server-projeto-korp`, `nginx`, `prometheus`, and `grafana`, run on a shared Docker bridge network (`korp-network`), created by Ansible before any container starts. The application container is the only one that does not expose any port to the host; it is reachable exclusively from within that network.
 
+<a id="containers-and-docker-compose"></a>
+## 🐳 Containers and Docker Compose
+
+Four containers, all connected to the same externally-managed bridge network:
+
+| Container | Exposed to host? | Purpose |
+|---|---|---|
+| `http-server-projeto-korp` | No | The **Go** application |
+| `nginx` | Yes (`80:80`) | Reverse proxy, the only public entry point |
+| `prometheus` | Yes (`9090:9090`) | Metrics collection and querying |
+| `grafana` | Yes (`3000:3000`) | Metrics visualization |
+
+<a id="tech-stack"></a>
 ## 🧰 Tech Stack
 
 | Layer | Technology |
@@ -65,10 +79,12 @@ All four containers, `http-server-projeto-korp`, `nginx`, `prometheus`, and `gra
 >
 > Feel free to use a different Linux distribution if you prefer. Just keep in mind that if you choose a distribution that is not Debian-based or does not use the **APT** package manager, you will need to adapt the **Ansible** playbooks. They currently rely on modules and tasks designed for **APT**-based environments, so they will not work correctly on distributions that use other package managers (such as `dnf`, `pacman`, etc.) without the necessary adjustments.
 
+<a id="project-structure"></a>
 ## 🗂️ Project Structure
 
 ![ProjectStructure](docs/project_overview.png)
 
+<a id="getting-started"></a>
 ## 🚀 Getting Started
 
 This repository does not cover the installation process for the host tools used in the project, such as **Vagrant**, **VirtualBox**, and **Ansible**. **Go**, **Docker**, and **Docker Compose** are not required on your host machine either, they are installed automatically inside the virtual machine by the **Ansible** playbook.
@@ -90,7 +106,7 @@ git clone https://github.com/thomaspalma1/korp-lab.git
 cd korp-lab
 ```
 
-### 🖥️ 2. Bring up the virtual machine
+### 💻 2. Bring up the virtual machine
 
 ```bash
 vagrant up
@@ -122,7 +138,7 @@ Inside the `ansible` directory, run:
 ansible-galaxy collection install -r requirements.yaml
 ```
 
-### 🛠️ 5. Provision the entire environment
+### 🔨 5. Provision the entire environment
 
 Still inside the same directory, run:
 
@@ -132,6 +148,7 @@ ansible-playbook -i inventory.ini playbook.yaml
 
 This single command installs **Docker**, configures a non-root user, creates the **Docker** network, clones this repository into the VM, configures **Nginx**, **Prometheus**, and **Grafana**, builds the application image, brings up the full stack, and finally validates the service with an HTTP request, printing the response directly to your console.
 
+<a id="usage-example"></a>
 ## 🧪 Usage Example
 
 Once provisioning completes, the service is reachable through the **Nginx** reverse proxy:
@@ -181,6 +198,7 @@ done
 
 Stop it at any time with `Ctrl+C`.
 
+<a id="observability-stack"></a>
 ## 📡 Observability Stack
 
 | Tool | Role |
@@ -190,36 +208,42 @@ Stop it at any time with `Ctrl+C`.
 
 Access, once the environment is up:
 
-| Service | URL |
+| Interface | URL |
 |---|---|
 | Application (via **Nginx**) | http://192.168.56.10 |
 | **Prometheus** UI | http://192.168.56.10:9090 |
+| **Prometheus** Targets page | http://192.168.56.10:9090/targets |
+| **Prometheus** Graph/query page | http://192.168.56.10:9090/graph |
 | **Grafana** UI | http://192.168.56.10:3000 (`admin` / `admin`) |
+| **Grafana** dashboard, direct link | http://192.168.56.10:3000/d/projeto-korp-overview |
 
 > [!NOTE]
 > The default `admin` / `admin` credentials are only appropriate for this local development environment. In a production setting, credentials like these should never be committed to a repository, they should be managed through environment variables, a secrets manager, or an equivalent solution.
 
-## 🎯 Observability Pillars Implemented
+### 📐 Prometheus
 
-### 🟢 Availability
+Two metrics are collected from the service:
 
-Exposed through **Prometheus**'s native `up` metric, generated automatically for every scrape target. No custom instrumentation is required for this pillar.
+- `up`, Prometheus's native metric for every scrape target: `1` when the last scrape succeeded, `0` otherwise. This reflects **liveness** (is the process reachable) rather than **readiness** (is the process functioning correctly). Since this service has no external dependencies, such as a database or a downstream API, there is currently no scenario where the process would be running but functionally broken, so the two concepts collapse into the same signal here. A service with such dependencies would benefit from a dedicated `/health` endpoint performing deeper checks, distinguishing "the process is up" from "the process is actually able to do its job."
+- `http_requests_total`, a custom counter incremented on every call to `/projeto-korp`, exposed in Prometheus exposition format via `client_golang`.
 
-This reflects **liveness** (is the process reachable?) rather than **readiness** (is the process functioning correctly?). Since this service has no external dependencies, such as a database or a downstream API, there is currently no scenario where the process would be running but functionally broken, so the two concepts collapse into the same signal here. In a real-world service with such dependencies, a dedicated `/health` endpoint performing deeper checks would provide a more accurate readiness signal, distinguishing "the process is up" from "the process is actually able to do its job."
+To validate the metrics directly in the Prometheus UI (`/graph`):
 
-### 📈 Request volume
+| Query | What it shows |
+|---|---|
+| `up{job="http-server-projeto-korp"}` | Service availability: `1` if up, `0` if down |
+| `http_requests_total` | Total requests received since the process started |
+| `rate(http_requests_total[1m])` | Requests per second, averaged over the last minute |
 
-Two complementary metrics expose request volume, each answering a different operational question:
+### 📺 Grafana
 
-- `http_requests_total`, a raw counter incremented on every call to `/projeto-korp`, answering "how many requests has this service handled in total?"
-- `rate(http_requests_total[1m])`, the same counter's per-second growth rate over a 1-minute window, answering "what is the current traffic pattern?"
+The **Grafana** dashboard, `Projeto Korp - Overview` (uid `projeto-korp-overview`), is auto-provisioned on startup via the files in `grafana/provisioning/`, along with a **Prometheus** data source pointing at `http://prometheus:9090`. No manual setup is required to see it.
 
-Both are exposed in **Prometheus** exposition format via `client_golang`.
+It has three panels, titled in Portuguese: *Disponibilidade do Serviço* (availability, stat panel), *Total de Requisições Recebidas* (total requests, stat panel), and *Volume de Requisições* (request volume, time series using `rate(http_requests_total[1m])`).
 
-### 📊 Dashboard
+To find it manually: log in, open **Dashboards** in the left sidebar, and select `Projeto Korp - Overview` (it lives in the default folder).
 
-A **Grafana** dashboard (`Projeto Korp - Overview`) with three panels, titled in Portuguese to match the technical challenge's original language: *Disponibilidade do Serviço* (availability), *Total de Requisições Recebidas* (total requests received), and *Volume de Requisições* (request volume, time series using `rate(http_requests_total[1m])`).
-
+<a id="infrastructure-provisioning-with-vagrant-and-ansible"></a>
 ## ⚙️ Infrastructure Provisioning with Vagrant and Ansible
 
 - **Vagrant** is scoped narrowly: it only creates the VM (box, hostname, network, resources). It performs no software provisioning, since that responsibility belongs entirely to **Ansible**, avoiding duplicated responsibility between the two tools.
@@ -238,24 +262,14 @@ A **Grafana** dashboard (`Projeto Korp - Overview`) with three panels, titled in
 | `service-deploy` | Builds the application image and brings up the full stack |
 | `service-validation` | Validates the service via HTTP and prints the response to the console |
 
-## 🐳 Containers and Docker Compose
-
-Four containers, all connected to the same externally-managed bridge network:
-
-| Container | Exposed to host? | Purpose |
-|---|---|---|
-| `http-server-projeto-korp` | No | The **Go** application |
-| `nginx` | Yes (`80:80`) | Reverse proxy, the only public entry point |
-| `prometheus` | Yes (`9090:9090`) | Metrics collection and querying |
-| `grafana` | Yes (`3000:3000`) | Metrics visualization |
-
+<a id="proof-of-execution"></a>
 ## ✅ Proof of Execution
 
 The following captures follow the natural order of validation. The environment is provisioned, the service responds, **Prometheus** confirms it is collecting metrics, and **Grafana** confirms it is visualizing them.
 
 ### 🖥️ 1. Ansible playbook run, ending with the smoke test response
 
-Shows the final task of the playbook printing the service's JSON response directly to the console, satisfying the technical challenge's explicit validation requirement.
+Shows the final task of the playbook printing the service's JSON response directly to the console.
 
 ![validation-service](docs/validation-service.png)
 
@@ -271,9 +285,9 @@ Confirms the **Prometheus** data source was connected automatically through prov
 
 ![grafana-datasource](docs/grafana-datasource.png)
 
-### 📊 4. Grafana Dashboard
+### 🖼️ 4. Grafana Dashboard
 
-The final deliverable of the monitoring requirement: all required metrics visualized side by side.
+The final deliverable of the monitoring setup: all metrics visualized side by side.
 
 ![grafana-panels](docs/grafana-panels.png)
 
@@ -283,9 +297,10 @@ A simulated failure, showing how the availability panel reacts when the service 
 
 ![grafana-panels-without-availability](docs/grafana-panels-without-availability.png)
 
+<a id="architectural-decisions"></a>
 ## 🧭 Architectural Decisions
 
-A few decisions were made where the technical challenge document left room for interpretation. Each is documented here with its rationale.
+A few decisions were made where the project's requirements left room for interpretation, or where a more conventional approach was intentionally traded for one that better fit the project's scope. Each is documented here with its rationale.
 
 ### 🌐 Network ownership
 
@@ -293,7 +308,7 @@ Declaring the network inside `docker-compose.yaml` would work, but it introduces
 
 ### 🔍 Prometheus scrape path
 
-The `/metrics` endpoint is meant for machine-to-machine consumption, not for external or human access. Routing it through **Nginx** would add a layer with no functional benefit, since **Nginx** currently has no route configured for it. **Prometheus** reaches the service directly over the internal **Docker** network, which the "no port exposed to host" requirement does not prohibit, since it only restricts host-level access.
+The `/metrics` endpoint is meant for machine-to-machine consumption, not for external or human access. Routing it through **Nginx** would add a layer with no functional benefit, since **Nginx** currently has no route configured for it. **Prometheus** reaches the service directly over the internal **Docker** network, which does not conflict with keeping the application container fully isolated from the host, since that isolation only restricts host-level access, not access from other containers on the same network.
 
 ### 🚢 Code delivery strategy
 
@@ -307,8 +322,14 @@ Following the Linux Filesystem Hierarchy Standard, the cloned repository (source
 
 ### 🔄 Consistency across configuration roles
 
-The technical challenge document explicitly allows the **Grafana** dashboard to be configured manually, treating file-based provisioning as a bonus. The **Nginx** configuration, however, has no such exception in the text. To keep the automation consistent and avoid two different delivery strategies for conceptually similar configuration files, all three services (**Nginx**, **Prometheus**, **Grafana**) are configured through dedicated, single-responsibility **Ansible** roles, even though strictly only **Nginx** required it.
+**Grafana** supports provisioning its dashboard and data source manually through the UI. **Nginx** and **Prometheus**, however, have no equivalent manual path, their configuration always lives in a file, regardless of how it gets there. To keep the automation consistent and avoid two different delivery strategies for conceptually similar configuration files, all three services, **Nginx**, **Prometheus**, and **Grafana**, are configured through dedicated, single-responsibility **Ansible** roles.
 
 ### 🔐 Non-root Docker access
 
 This is not strictly required for the **Ansible**-driven provisioning to work, since all **Ansible** tasks already run with elevated privileges via `become: true`. However, it follows **Docker**'s official post-installation recommendation and makes manual inspection of the environment (`vagrant ssh` followed by `docker ps`, without `sudo`) considerably more convenient during a live demonstration.
+
+## 🧠 Closing Note
+
+<p align="center">
+  <img src="https://ForTheBadge.com/images/badges/built-with-love.svg">
+</p>
