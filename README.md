@@ -297,11 +297,9 @@ The `/metrics` endpoint is meant for machine-to-machine consumption, not for ext
 
 ### 🚢 Code delivery strategy
 
-Rather than copying files from the control machine into the VM, the `clone-repository` role clones the project's public GitHub repository directly. This was chosen deliberately to mirror a more realistic deployment flow, and to guarantee that the provisioned environment always reflects exactly what is published in the repository, eliminating any risk of divergence between local, uncommitted changes and what actually gets deployed.
+Rather than copying files from the control machine into the VM, the `clone-repository` role clones the project's public GitHub repository directly. This mirrors a more realistic deployment flow and guarantees the provisioned environment always reflects exactly what is published in the repository, eliminating any risk of divergence from local, uncommitted changes.
 
-In a real production environment, the most appropriate approach would be to use a **CI/CD** pipeline. During the **Continuous Integration (CI)** stage, a new **Docker** image could be built from a specific version of the codebase, using tags to manage releases and ensure traceability. During the **Continuous Deployment (CD)** stage, this image would be pushed to an image registry, such as **Nexus Repository**, **Cloudsmith**, **AWS CodeArtifact**, or an equivalent solution, so the deployment process would use a previously built and versioned image, without requiring the build to be executed directly in the target environment.
-
-Given the scope of this project, however, the repository itself hosted on GitHub is treated as the source of truth. For this reason, the chosen approach was to clone the repository and build the image during infrastructure provisioning.
+In a real production environment, a **CI/CD** pipeline would build and version a **Docker** image, pushing it to a registry (**Nexus**, **Cloudsmith**, **AWS CodeArtifact**, etc.), so deployment would consume a pre-built image rather than building on the target host. Given this project's scope, the GitHub repository itself is treated as the source of truth, so the image is built during provisioning instead.
 
 ### 📁 Configuration file locations
 
