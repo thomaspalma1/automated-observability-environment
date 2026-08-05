@@ -155,18 +155,21 @@ curl http://192.168.56.10:8080/projeto-korp
 To see the **Grafana** dashboard react to live traffic, particularly the request volume panel, the following script fires a variable number of requests per second against the service, cycling through a fixed sequence of rates:
 
 ```bash
-RPS_VALUES=(1 2 3 2 1)
-CYCLES=5
+# Defines the request load pattern.
+# Each range represents a gradual increase or decrease in the number of
+# requests sent, creating a wave-like traffic pattern over time.
+load_pattern=({1..10} {9..3} {4..10} {9..1})
 
-for ((cycle = 1; cycle <= CYCLES; cycle++)); do
-  echo "Cycle $cycle of $CYCLES"
-  for rps in "${RPS_VALUES[@]}"; do
-    echo "  RPS: $rps"
-    interval=$(echo "scale=3; 1 / $rps" | bc)
-    for ((i = 0; i < rps; i++)); do
-      curl -s http://192.168.56.10/projeto-korp
-      sleep "$interval"
+while true; do
+  for request_count in "${load_pattern[@]}"; do
+    echo "RPS: $request_count"
+
+    for ((request = 0; request < request_count; request++)); do
+      curl -s http://192.168.56.10/projeto-korp &
     done
+
+    wait
+    sleep 3
   done
 done
 ```
