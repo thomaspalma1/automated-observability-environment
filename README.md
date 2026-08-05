@@ -156,7 +156,7 @@ curl http://192.168.56.10:8080/projeto-korp
 
 ### 📶 Generating traffic for demonstration purposes
 
-To see the **Grafana** dashboard react to live traffic, particularly the request volume panel, the following script fires a variable number of requests per second against the service, cycling through a fixed sequence of rates:
+To see the **Grafana** dashboard react to live traffic, particularly the request volume panel, the following script fires a variable number of requests per second against the service, cycling through a fixed sequence of rates, peaking at 10 concurrent requests per burst:
 
 ```bash
 # Defines the request load pattern.
@@ -277,9 +277,11 @@ The final deliverable of the monitoring requirement: all required metrics visual
 
 ![grafana-panels](docs/grafana-panels.png)
 
-And below is a simulation in which the service is unavailable. In this scenario, you can see how Grafana reflects the application's loss of availability, making it easy to quickly identify that the service has stopped responding.
+### 🔴 5. Grafana Dashboard, service unavailable
 
-![grafana-panels-without-availability.png](docs/grafana-panels-without-availability.png)
+A simulated failure, showing how the availability panel reacts when the service stops responding, making the outage immediately visible.
+
+![grafana-panels-without-availability](docs/grafana-panels-without-availability.png)
 
 ## 🧭 Architectural Decisions
 
