@@ -75,7 +75,7 @@ Four containers, all connected to the same externally-managed bridge network:
 | Operating System | **Ubuntu** 22.04 LTS (Jammy) |
 
 > [!IMPORTANT]
-> **Ubuntu** was chosen as the operating system for the virtual machine solely for convenience during development and testing.
+> **Ubuntu** was chosen as the operating system for the virtual machine purely for convenience during development and testing.
 >
 > Feel free to use a different Linux distribution if you prefer. Just keep in mind that if you choose a distribution that is not Debian-based or does not use the **APT** package manager, you will need to adapt the **Ansible** playbooks. They currently rely on modules and tasks designed for **APT**-based environments, so they will not work correctly on distributions that use other package managers (such as `dnf`, `pacman`, etc.) without the necessary adjustments.
 
