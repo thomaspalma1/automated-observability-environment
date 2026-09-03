@@ -1,6 +1,6 @@
 ---
-- name: Create korp-network bridge network
+- name: Create observability-network bridge network
   community.docker.docker_network:
-    name: korp-network
+    name: observability-network
     driver: bridge
     state: present
