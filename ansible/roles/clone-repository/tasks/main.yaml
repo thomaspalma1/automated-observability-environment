@@ -4,16 +4,16 @@
     name: git
     state: present
 
-- name: Clone the Korp Lab repository
+- name: Clone the project repository
   ansible.builtin.git:
-    repo: "https://github.com/thomaspalma1/korp-lab.git"
-    dest: "/opt/korp-lab"
+    repo: "https://github.com/thomaspalma1/automated-observability-environment.git"
+    dest: "/opt/automated-observability-environment"
     version: main
     force: true
 
 - name: Ensure repository ownership belongs to the deployment user
   ansible.builtin.file:
-    path: "/opt/korp-lab"
+    path: "/opt/automated-observability-environment"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     recurse: true
