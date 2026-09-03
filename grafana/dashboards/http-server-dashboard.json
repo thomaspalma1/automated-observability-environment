@@ -1,6 +1,6 @@
 {
-  "title": "Projeto Korp - Overview",
-  "uid": "projeto-korp-overview",
+  "title": "HTTP Server - Overview",
+  "uid": "http-server-overview",
   "schemaVersion": 39,
   "version": 3,
   "refresh": "5s",
@@ -11,7 +11,7 @@
   "panels": [
     {
       "id": 1,
-      "title": "Disponibilidade do Serviço",
+      "title": "Service Availability",
       "type": "stat",
       "gridPos": { "h": 8, "w": 8, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
@@ -28,14 +28,14 @@
       },
       "targets": [
         {
-          "expr": "up{job=\"http-server-projeto-korp\"}",
+          "expr": "up{job=\"http-server\"}",
           "refId": "A"
         }
       ]
     },
     {
       "id": 2,
-      "title": "Total de Requisições Recebidas",
+      "title": "Total Requests Received",
       "type": "stat",
       "gridPos": { "h": 8, "w": 8, "x": 8, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
@@ -58,7 +58,7 @@
     },
     {
       "id": 3,
-      "title": "Volume de Requisições (req/s)",
+      "title": "Request Volume (req/s)",
       "type": "timeseries",
       "gridPos": { "h": 8, "w": 8, "x": 16, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
