@@ -1,6 +1,6 @@
 ---
-- name: Provision the Korp Project Environment
-  hosts: korp_lab
+- name: Provision the Automated Observability Environment
+  hosts: observability_environment
   become: true
   roles:
     - update-os
