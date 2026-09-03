@@ -1,4 +1,4 @@
-# **Korp Lab**
+# **Automated Observability Environment**
 
 <p align="justify">
    <img src="https://cdn.jsdelivr.net/gh/devicons/devicon@latest/icons/go/go-original.svg" width="50" height="50"/>
@@ -31,7 +31,7 @@ A containerized HTTP service built in **Go** with **Gin**, fully provisioned and
 <a id="overview"></a>
 ## 📖 Overview
 
-Korp Lab is a small HTTP service, `http-server-projeto-korp`, that exposes a single endpoint returning its name and the current UTC time. While the service itself is intentionally simple, the project's real focus is the infrastructure and automation around it: a reverse proxy, a full observability stack, and an entirely automated provisioning pipeline that takes a basic Linux VM and turns it into a fully running environment with a single **Ansible** command.
+This project is a small HTTP service, `http-server`, that exposes a single endpoint returning its name and the current UTC time. While the service itself is intentionally simple, the project's real focus is the infrastructure and automation around it: a reverse proxy, a full observability stack, and an entirely automated provisioning pipeline that takes a basic Linux VM and turns it into a fully running environment with a single **Ansible** command.
 
 This project emphasizes clear architectural decisions, reproducibility, and infrastructure best practices, treating a deliberately small application as a vehicle for exploring container networking, observability, and configuration management in depth.
 
@@ -46,7 +46,7 @@ The way requests move through the system is straightforward:
 4. Independently, **Prometheus** scrapes the application's `/metrics` endpoint directly over the internal Docker network, on port `8080`, bypassing Nginx entirely.
 5. **Grafana** queries Prometheus and renders the collected metrics on the provisioned dashboard.
 
-All four containers, `http-server-projeto-korp`, `nginx`, `prometheus`, and `grafana`, run on a shared Docker bridge network (`korp-network`), created by Ansible before any container starts. The application container is the only one that does not expose any port to the host; it is reachable exclusively from within that network.
+All four containers, `http-server`, `nginx`, `prometheus`, and `grafana`, run on a shared Docker bridge network (`observability-network`), created by Ansible before any container starts. The application container is the only one that does not expose any port to the host; it is reachable exclusively from within that network.
 
 <a id="containers-and-docker-compose"></a>
 ## 🐳 Containers and Docker Compose
@@ -55,7 +55,7 @@ Four containers, all connected to the same externally-managed bridge network:
 
 | Container | Exposed to host? | Purpose |
 |---|---|---|
-| `http-server-projeto-korp` | No | The **Go** application |
+| `http-server` | No | The **Go** application |
 | `nginx` | Yes (`80:80`) | Reverse proxy, the only public entry point |
 | `prometheus` | Yes (`9090:9090`) | Metrics collection and querying |
 | `grafana` | Yes (`3000:3000`) | Metrics visualization |
@@ -102,8 +102,8 @@ Once **Vagrant**, **VirtualBox**, and **Ansible** are installed and confirmed to
 ### 📥 1. Clone this repository
 
 ```bash
-git clone https://github.com/thomaspalma1/korp-lab.git
-cd korp-lab
+git clone https://github.com/thomaspalma1/automated-observability-environment.git
+cd automated-observability-environment
 ```
 
 ### 💻 2. Bring up the virtual machine
@@ -120,7 +120,7 @@ This creates an **Ubuntu** 22.04 VM with a fixed private network IP (`192.168.56
 > If you want to change it, feel free to use another address within your private network, as long as you update it in every location where it's referenced:
 >
 > - `Vagrantfile`, where the virtual machine's IP address is defined.
-> - `ansible/inventory.ini`, inside the `korp_lab` group, where the managed machine's address is configured.
+> - `ansible/inventory.ini`, inside the `observability_environment` group, where the managed machine's address is configured.
 >
 > Make sure both files use the same address to avoid communication issues between **Vagrant** and **Ansible**.
 
@@ -154,20 +154,20 @@ This single command installs **Docker**, configures a non-root user, creates the
 Once provisioning completes, the service is reachable through the **Nginx** reverse proxy:
 
 ```bash
-curl http://192.168.56.10/projeto-korp
+curl http://192.168.56.10/status
 ```
 
 ```json
 {
-  "nome": "Projeto Korp",
-  "horario": "2026-08-02T00:00:18Z"
+  "name": "http-server",
+  "time": "2026-08-02T00:00:18Z"
 }
 ```
 
 Direct access to the application container is intentionally blocked. The service never exposes port `8080` to the host:
 
 ```bash
-curl http://192.168.56.10:8080/projeto-korp
+curl http://192.168.56.10:8080/status
 # curl: (7) Failed to connect to 192.168.56.10 port 8080: Connection refused
 ```
 
@@ -187,7 +187,7 @@ while true; do
     echo "RPS: $request_count"
 
     for ((request = 0; request < request_count; request++)); do
-      curl -s http://192.168.56.10/projeto-korp &
+      curl -s http://192.168.56.10/status &
     done
 
     wait
@@ -214,7 +214,7 @@ Access, once the environment is up:
 | **Prometheus** Targets page | http://192.168.56.10:9090/targets |
 | **Prometheus** Graph/query page | http://192.168.56.10:9090/graph |
 | **Grafana** UI | http://192.168.56.10:3000 (`admin` / `admin`) |
-| **Grafana** dashboard, direct link | http://192.168.56.10:3000/d/projeto-korp-overview |
+| **Grafana** dashboard, direct link | http://192.168.56.10:3000/d/status-overview |
 
 > [!NOTE]
 > The default `admin` / `admin` credentials are only appropriate for this local development environment. In a production setting, credentials like these should never be committed to a repository, they should be managed through environment variables, a secrets manager, or an equivalent solution.
@@ -224,23 +224,23 @@ Access, once the environment is up:
 Two metrics are collected from the service:
 
 - `up`, Prometheus's native metric for every scrape target: `1` when the last scrape succeeded, `0` otherwise. This reflects **liveness** (is the process reachable) rather than **readiness** (is the process functioning correctly). Since this service has no external dependencies, such as a database or a downstream API, there is currently no scenario where the process would be running but functionally broken, so the two concepts collapse into the same signal here. A service with such dependencies would benefit from a dedicated `/health` endpoint performing deeper checks, distinguishing "the process is up" from "the process is actually able to do its job."
-- `http_requests_total`, a custom counter incremented on every call to `/projeto-korp`, exposed in Prometheus exposition format via `client_golang`.
+- `http_requests_total`, a custom counter incremented on every call to `/status`, exposed in Prometheus exposition format via `client_golang`.
 
 To validate the metrics directly in the Prometheus UI (`/graph`):
 
 | Query | What it shows |
 |---|---|
-| `up{job="http-server-projeto-korp"}` | Service availability: `1` if up, `0` if down |
+| `up{job="http-server"}` | Service availability: `1` if up, `0` if down |
 | `http_requests_total` | Total requests received since the process started |
 | `rate(http_requests_total[1m])` | Requests per second, averaged over the last minute |
 
 ### 📺 Grafana
 
-The **Grafana** dashboard, `Projeto Korp - Overview` (uid `projeto-korp-overview`), is auto-provisioned on startup via the files in `grafana/provisioning/`, along with a **Prometheus** data source pointing at `http://prometheus:9090`. No manual setup is required to see it.
+The **Grafana** dashboard, `HTTP Server - Overview` (uid `http-server-overview`), is auto-provisioned on startup via the files in `grafana/provisioning/`, along with a **Prometheus** data source pointing at `http://prometheus:9090`. No manual setup is required to see it.
 
-It has three panels, titled in Portuguese: *Disponibilidade do Serviço* (availability, stat panel), *Total de Requisições Recebidas* (total requests, stat panel), and *Volume de Requisições* (request volume, time series using `rate(http_requests_total[1m])`).
+It has three panels: *Service Availability* (stat panel), *Total Requests Received* (stat panel), and *Request Volume* (time series using `rate(http_requests_total[1m])`).
 
-To find it manually: log in, open **Dashboards** in the left sidebar, and select `Projeto Korp - Overview` (it lives in the default folder).
+To find it manually: log in, open **Dashboards** in the left sidebar, and select `HTTP Server - Overview` (it lives in the default folder).
 
 <a id="infrastructure-provisioning-with-vagrant-and-ansible"></a>
 ## ⚙️ Infrastructure Provisioning with Vagrant and Ansible
@@ -253,7 +253,7 @@ To find it manually: log in, open **Dashboards** in the left sidebar, and select
 | `update-os` | Updates the apt cache and upgrades packages |
 | `docker-install` | Installs **Docker** following the official documentation for **Ubuntu** |
 | `docker-non-root` | Adds the deployment user to the `docker` group |
-| `docker-network` | Creates the `korp-network` bridge network |
+| `docker-network` | Creates the `observability-network` bridge network |
 | `clone-repository` | Clones this repository into the VM |
 | `nginx` | Deploys the reverse proxy configuration |
 | `prometheus` | Deploys the scrape configuration |
@@ -286,7 +286,7 @@ Confirms the **Prometheus** data source was connected automatically through prov
 
 ### 🖼️ 4. Grafana Dashboard
 
-The final deliverable of the monitoring setup: all metrics visualized side by side.
+The end result of the monitoring setup: all metrics visualized side by side.
 
 ![grafana-panels](docs/grafana-panels.png)
 
@@ -299,7 +299,7 @@ A simulated failure, showing how the availability panel reacts when the service 
 <a id="architectural-decisions"></a>
 ## 🧭 Architectural Decisions
 
-A few decisions were made where the project's requirements left room for interpretation, or where a more conventional approach was intentionally traded for one that better fit the project's scope. Each is documented here with its rationale.
+A few decisions were made where more than one approach would have worked, or where a more conventional option was intentionally traded for one that better fit this project's scope. Each is documented here with its rationale.
 
 ### 🌐 Network ownership
 
@@ -317,7 +317,7 @@ In a real production environment, a **CI/CD** pipeline would build and version a
 
 ### 📁 Configuration file locations
 
-Following the Linux Filesystem Hierarchy Standard, the cloned repository (source code) lives under `/opt/korp-lab`, while the configuration files actually consumed by each container are copied to `/etc/korp-lab/<service>` by dedicated **Ansible** roles. This keeps the git checkout and the deployed configuration as two clearly separated concerns, even though both ultimately originate from the same single source of truth: the repository.
+Following the Linux Filesystem Hierarchy Standard, the cloned repository (source code) lives under `/opt/automated-observability-environment`, while the configuration files actually consumed by each container are copied to `/etc/automated-observability-environment/<service>` by dedicated **Ansible** roles. This keeps the git checkout and the deployed configuration as two clearly separated concerns, even though both ultimately originate from the same single source of truth: the repository.
 
 ### 🔄 Consistency across configuration roles
 
@@ -325,7 +325,7 @@ Following the Linux Filesystem Hierarchy Standard, the cloned repository (source
 
 ### 🔐 Non-root Docker access
 
-This is not strictly required for the **Ansible**-driven provisioning to work, since all **Ansible** tasks already run with elevated privileges via `become: true`. However, it follows **Docker**'s official post-installation recommendation and makes manual inspection of the environment (`vagrant ssh` followed by `docker ps`, without `sudo`) considerably more convenient during a live demonstration.
+This is not strictly required for the **Ansible**-driven provisioning to work, since all **Ansible** tasks already run with elevated privileges via `become: true`. However, it follows **Docker**'s official post-installation recommendation and makes manual inspection of the environment (`vagrant ssh` followed by `docker ps`, without `sudo`) considerably more convenient.
 
 ## 🧠 Closing Note
 
