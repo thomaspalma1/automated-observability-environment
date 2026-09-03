@@ -1,4 +1,4 @@
-module github.com/thomaspalma1/korp-lab
+module github.com/thomaspalma1/automated-observability-environment
 
 go 1.26.2
 
