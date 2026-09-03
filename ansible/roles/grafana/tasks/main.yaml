@@ -5,17 +5,17 @@
     state: directory
     mode: "0755"
   loop:
-    - /etc/korp-lab/grafana/provisioning/datasources
-    - /etc/korp-lab/grafana/provisioning/dashboards
-    - /etc/korp-lab/grafana/dashboards
+    - /etc/automated-observability-environment/grafana/provisioning/datasources
+    - /etc/automated-observability-environment/grafana/provisioning/dashboards
+    - /etc/automated-observability-environment/grafana/dashboards
 
 - name: Copy Grafana configuration and dashboard files
   ansible.builtin.copy:
-    src: "/opt/korp-lab/grafana/{{ item }}"
-    dest: "/etc/korp-lab/grafana/{{ item }}"
+    src: "/opt/automated-observability-environment/grafana/{{ item }}"
+    dest: "/etc/automated-observability-environment/grafana/{{ item }}"
     remote_src: true
     mode: "0644"
   loop:
     - provisioning/datasources/datasources.yaml
     - provisioning/dashboards/dashboards.yaml
-    - dashboards/http-server-projeto-korp-dashboard.json
+    - dashboards/http-server-dashboard.json
