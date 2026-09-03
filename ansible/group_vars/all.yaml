@@ -1,0 +1,6 @@
+---
+# OS user on the target host that owns the deployed code and runs Docker.
+# Deliberately separate from `ansible_user`, which is only the SSH identity
+# Ansible connects with. They happen to be the same user in this Vagrant
+# environment, but nothing in the provisioning requires that to be true.
+deployment_user: vagrant
