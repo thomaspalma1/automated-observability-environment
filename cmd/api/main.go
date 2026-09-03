@@ -13,19 +13,19 @@ import (
 var httpRequestsTotal = promauto.NewCounter(
 	prometheus.CounterOpts{
 		Name: "http_requests_total",
-		Help: "Total de requisições HTTP recebidas pelo serviço",
+		Help: "Total number of HTTP requests received by the service",
 	},
 )
 
 func main() {
 	router := gin.Default()
 
-	router.GET("/projeto-korp", func(context *gin.Context) {
+	router.GET("/status", func(context *gin.Context) {
 		httpRequestsTotal.Inc()
 
 		context.JSON(http.StatusOK, gin.H{
-			"nome":    "Projeto Korp",
-			"horario": time.Now().UTC().Format(time.RFC3339),
+			"name": "http-server",
+			"time": time.Now().UTC().Format(time.RFC3339),
 		})
 	})
 
