@@ -1,6 +1,6 @@
 ---
 - name: Build and start the application stack
   community.docker.docker_compose_v2:
-    project_src: "/opt/korp-lab"
+    project_src: "/opt/automated-observability-environment"
     build: always
     state: present
