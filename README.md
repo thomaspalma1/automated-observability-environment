@@ -327,6 +327,10 @@ Following the Linux Filesystem Hierarchy Standard, the cloned repository (source
 
 This is not strictly required for the **Ansible**-driven provisioning to work, since all **Ansible** tasks already run with elevated privileges via `become: true`. However, it follows **Docker**'s official post-installation recommendation and makes manual inspection of the environment (`vagrant ssh` followed by `docker ps`, without `sudo`) considerably more convenient.
 
+### 🧑‍💻 Deployment identity
+
+`ansible_user` in the inventory is only the account **Ansible** uses to connect over SSH. The user that owns `/opt/automated-observability-environment` and belongs to the `docker` group does a different job, so it gets its own variable named `deployment_user`, defined in `ansible/group_vars/all.yaml`. Both are `vagrant` here, but using `ansible_user` for both would tie the account that logs in to the account that owns the deployment. Outside a local lab these are rarely the same user. The account used to log in is usually not the one that should own the files or run the containers. To deploy as a different user, change `deployment_user` and leave the inventory alone.
+
 ## 🧠 Closing Note
 
 <p align="center">
