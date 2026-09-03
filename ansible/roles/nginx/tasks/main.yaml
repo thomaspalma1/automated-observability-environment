@@ -1,13 +1,13 @@
 ---
 - name: Create Nginx configuration directory
   ansible.builtin.file:
-    path: /etc/korp-lab/nginx
+    path: /etc/automated-observability-environment/nginx
     state: directory
     mode: "0755"
 
 - name: Configure Nginx reverse proxy
   ansible.builtin.copy:
-    src: /opt/korp-lab/nginx/http-server-projeto-korp.conf
-    dest: /etc/korp-lab/nginx/http-server-projeto-korp.conf
+    src: /opt/automated-observability-environment/nginx/http-server.conf
+    dest: /etc/automated-observability-environment/nginx/http-server.conf
     remote_src: true
     mode: "0644"
